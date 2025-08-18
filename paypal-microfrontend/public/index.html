@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PayPal Microfrontend</title>
+</head>
+<body>
+  <h1>PayPal Microfrontend Test</h1>
+  <button id="paypal-btn">Pay with PayPal</button>
+
+  <!-- Browser OTEL -->
+  <script type="module" src="./otel-setup.js"></script>
+
+  <script>
+    document.getElementById('paypal-btn').addEventListener('click', () => {
+      console.log('PayPal button clicked!');
+      alert('Payment simulated ✅');
+    });
+  </script>
+</body>
+</html>

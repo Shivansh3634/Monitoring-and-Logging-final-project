@@ -1,0 +1,24 @@
+version: '3'
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.3
+    container_name: clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+
+  signoz:
+    image: signoz/signoz:latest
+    container_name: signoz
+    ports:
+      - "3301:3301"
+      - "3302:3302"
+      - "3303:3303"
+      - "3304:3304"
+    depends_on:
+      - clickhouse
+
+volumes:
+  clickhouse-data:
