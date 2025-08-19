@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infra-k8s-infra-otel-agent
+  namespace: platform
+spec:
+  replicas: {{ .Values.otelCollector.replicas }}
+  selector:
+    matchLabels:
+      app: infra-k8s-infra-otel-agent
+  template:
+    metadata:
+      labels:
+        app: infra-k8s-infra-otel-agent
+    spec:
+      containers:
+        - name: infra-k8s-infra-otel-agent
+          image: {{ .Values.otelCollector.image }}
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/otel-collector-config
+              readOnly: true
+      volumes:
+        - name: config-volume
+          configMap:
+            name: infra-k8s-infra-otel-agent
+            items:
+              - key: otel-config.yaml
+                path: otel-config.yaml

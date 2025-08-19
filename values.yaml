@@ -1,0 +1,32 @@
+clickhouse:
+  replicas: 1
+  image:
+    repository: clickhouse/clickhouse-server
+    tag: 22.8
+  persistence:
+    enabled: false
+
+otelCollector:
+  replicas: 1
+  env:
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: "http://signoz:4318"
+    - name: SIGNOZ_API_KEY
+      value: ""
+  config:
+    receivers:
+      otlp:
+        protocols:
+          http: {}
+          grpc: {}
+    exporters:
+      signoz:
+        endpoint: "http://signoz:4317"
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          exporters: [signoz]
+  image:
+    repository: otel/opentelemetry-collector-contrib
+    tag: 0.132.0-nightly.7941d0d-386

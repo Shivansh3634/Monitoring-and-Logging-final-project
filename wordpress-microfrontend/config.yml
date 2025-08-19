@@ -1,0 +1,10 @@
+tunnel: mytunnel2
+credentials-file: /etc/cloudflared/cert.pem
+ingress:
+  - hostname: s8r.k3p.dev
+    service: http://localhost:8082
+  - hostname: p4l.k3p.dev
+    service: http://localhost:8084
+  - hostname: w7s.k3p.dev
+    service: http://localhost:8086
+  - service: http_status:404

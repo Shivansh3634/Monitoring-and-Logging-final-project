@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: platform
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: clickhouse
+  namespace: platform
+spec:
+  selector:
+    app: clickhouse
+  ports:
+    - name: tcp-client
+      protocol: TCP
+      port: 9000
+      targetPort: 9000
+    - name: http-interface
+      protocol: TCP
+      port: 8123
+      targetPort: 8123
+  type: ClusterIP
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clickhouse
+  namespace: platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: clickhouse
+  template:
+    metadata:
+      labels:
+        app: clickhouse
+    spec:
+      containers:
+        - name: clickhouse
+          image: clickhouse/clickhouse-server:22.8
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9000
+            - containerPort: 8123
+          volumeMounts:
+            - name: clickhouse-data
+              mountPath: /var/lib/clickhouse
+      volumes:
+        - name: clickhouse-data
+          emptyDir: {}
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: infra-k8s-infra-otel-agent
+  namespace: platform
+data:
+  otel-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+
+    processors:
+      batch:
+
+    exporters:
+      clickhousemetricswrite:
+        endpoint: "clickhouse:9000"
+      clickhousetraces:
+        endpoint: "clickhouse:9000"
+
+    service:
+      pipelines:
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [clickhousemetricswrite]
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [clickhousetraces]
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: infra-k8s-infra-otel-agent
+  namespace: platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: infra-k8s-infra-otel-agent
+  template:
+    metadata:
+      labels:
+        app: infra-k8s-infra-otel-agent
+    spec:
+      containers:
+        - name: infra-k8s-infra-otel-agent
+          image: otel/opentelemetry-collector-contrib:v0.132.4
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/otel-collector-config
+              readOnly: true
+      volumes:
+        - name: config-volume
+          configMap:
+            name: infra-k8s-infra-otel-agent
+            items:
+              - key: otel-config.yaml
+                path: otel-config.yaml

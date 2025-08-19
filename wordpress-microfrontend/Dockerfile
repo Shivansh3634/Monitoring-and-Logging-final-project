@@ -1,20 +1,20 @@
-# Base image for NodeJS app
-FROM node:20-alpine
+# Base image
+FROM python:3.10-slim
 
-# Set working directory
+# Working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+# Copy dependencies
+COPY requirements.txt .
 
 # Install dependencies
-RUN npm install
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all app files
+# Copy app code
 COPY . .
 
-# Expose app port
-EXPOSE 8080
+# Expose port (Flask default 5000)
+EXPOSE 5000
 
-# Start the app
-CMD ["node", "index.js"]
+# Run Flask app
+CMD ["python", "app.py"]
